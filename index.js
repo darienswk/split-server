@@ -4,20 +4,35 @@ const cors = require('cors')
 const express = require('express');
 const db = require('./firebase');
 const firestore = require('firebase/firestore')
+const axios = require('axios');
 
 const { collection, addDoc, getDocs, orderBy, query, deleteDoc, doc } = firestore;
 
 const app = express();
 const port = 5000;
+const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY;
+console.log(EXCHANGE_RATE_API_KEY)
+const BASE_CURRENCY = 'SGD';
+const EXCHANGE_RATE_API_URL = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/latest/${BASE_CURRENCY}`;
+
 
 // Middleware to parse JSON requests
 app.use(express.json());
 app.use(cors());
 
+app.get('/exchange-rates', async (req, res) => {
+    try {
+        const response = await axios.get(EXCHANGE_RATE_API_URL);
+        res.status(200).json(response.data.conversion_rates);
+    } catch (error) {
+        console.error('Error fetching exchange rates:', error);
+        res.status(500).json({ error: 'Failed to fetch exchange rates' });
+    }
+});
+
 // Create an item
 app.post('/payments', async (req, res) => {
   try {
-    console.log(req.body)
     const {newItem} = req.body;
     const colRef = collection(db, 'payments');
     // Add a new document with a generated ID
