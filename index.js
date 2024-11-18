@@ -12,7 +12,6 @@ const { collection, addDoc, getDocs, orderBy, query, deleteDoc, doc, where } =
 const app = express();
 const port = 5000;
 const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY;
-console.log(EXCHANGE_RATE_API_KEY);
 const BASE_CURRENCY = "SGD";
 // const EXCHANGE_RATE_API_URL = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/latest/${BASE_CURRENCY}`;
 const EXCHANGE_RATE_API_URL = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/latest/${BASE_CURRENCY}`;
