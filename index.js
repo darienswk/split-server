@@ -6,8 +6,17 @@ const db = require("./firebase");
 const firestore = require("firebase/firestore");
 const axios = require("axios");
 
-const { collection, addDoc, getDocs, orderBy, query, deleteDoc, doc, where } =
-  firestore;
+const {
+  collection,
+  addDoc,
+  getDocs,
+  orderBy,
+  query,
+  deleteDoc,
+  doc,
+  where,
+  updateDoc,
+} = firestore;
 
 const app = express();
 const port = 5000;
@@ -30,19 +39,46 @@ app.get("/exchange-rates", async (req, res) => {
   }
 });
 
+app.post("/update-item", async (req, res) => {
+  try {
+    const item = req.body;
+
+    if (!item.id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing item ID" });
+    }
+
+    const { id, ...fieldsToUpdate } = item;
+
+    // Optionally prevent updating createdAt (if needed)
+    delete fieldsToUpdate.createdAt;
+
+    const docRef = doc(db, "payments", id);
+    await updateDoc(docRef, fieldsToUpdate);
+
+    res
+      .status(200)
+      .json({ success: true, message: `Item ${id} updated successfully` });
+  } catch (error) {
+    console.error("Error updating item:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Create an item
 app.post("/payments", async (req, res) => {
   try {
     const { newItem } = req.body;
     const colRef = collection(db, "payments");
     // Add a new document with a generated ID
-    await addDoc(colRef, {
+    const docRef = await addDoc(colRef, {
       ...newItem,
       createdAt: new Date(),
     });
-    res.status(201).send("Item created");
+    res.status(201).json({ success: true, id: docRef.id });
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).json({ success: false, error: error.message }); // Send error response
   }
 });
 
@@ -75,9 +111,11 @@ app.delete("/payments/:id", async (req, res) => {
   try {
     const itemId = req.params.id;
     await deleteDoc(doc(db, "payments", itemId));
-    res.status(200).send(`Item with ID: ${itemId} deleted`);
+    res
+      .status(200)
+      .json({ success: true, message: `Document with ID ${docId} deleted` });
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
